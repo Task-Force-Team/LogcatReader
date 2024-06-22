@@ -104,17 +104,7 @@ void LogcatReader::onStartClicked() {
 }
 
 void LogcatReader::onExitClicked() {
-    if (running) {
-        running = false;
-        if (logFile) {
-            pclose(logFile);
-            logFile = nullptr;
-        }
-        std::string command = "pkill -SIGINT adb";
-        system(command.c_str());
-        logThread.join();
-    }
-    hide(); // Close the window
+    exit(0);
 }
 
 void LogcatReader::onLogTypeChanged() {
