@@ -15,8 +15,8 @@ LogcatReader::LogcatReader()
     logTypes.append("Errors");
     logTypes.append("Warnings");
     logTypes.append("Info");
-    logTypes.append("Kernel logs");
-    logTypes.append("Driver log");
+    //logTypes.append("Kernel logs");
+    //logTypes.append("Driver log");
     logTypes.set_active(0);
 
     // Set up log buffer
