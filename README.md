@@ -50,6 +50,7 @@ sudo urpmi gtkmm30
 make
 ```
 
-
-
-sudo
+- **Launching**: Very good, for launching just do:
+```sh
+./logcatreader
+```
