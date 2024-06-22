@@ -30,5 +30,6 @@ $(TARGET): $(OBJS)
 # Clean target to remove generated files
 clean:
 	rm -f $(OBJS) $(TARGET)
+
 install:
     install -Dm755 logcatreader $(DESTDIR)/usr/bin/logcatreader
