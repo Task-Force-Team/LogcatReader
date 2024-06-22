@@ -31,5 +31,6 @@ $(TARGET): $(OBJS)
 clean:
 	rm -f $(OBJS) $(TARGET)
 
+# Install target
 install:
-    install -Dm755 logcatreader $(DESTDIR)/usr/bin/logcatreader
+	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
