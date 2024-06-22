@@ -163,39 +163,51 @@ void LogcatReader::onDispatcher() {
         std::lock_guard<std::mutex> lock(logMutex);
         localQueue.swap(logQueue);
     }
+    std::string selectedOption = logTypes.get_active_text();
+    std::string logType = getLogType(selectedOption);
+
     while (!localQueue.empty()) {
         std::string line = localQueue.front();
         localQueue.pop();
-        auto iter = logBuffer->end();
-        logBuffer->insert(iter, line);
-        iter = logBuffer->end();
-        iter.backward_chars(line.length());
 
-        // Apply tags based on content
-        if (line.find(" E ") != std::string::npos) {
-            logBuffer->apply_tag(errorTag, iter, logBuffer->end());
-        } else if (line.find(" W ") != std::string::npos) {
-            logBuffer->apply_tag(warningTag, iter, logBuffer->end());
-        } else if (line.find(" I ") != std::string::npos) {
-            logBuffer->apply_tag(infoTag, iter, logBuffer->end());
-        }
+        // Filter logs based on the selected log type
+        if ((logType == "*:E" && line.find(" E/") != std::string::npos) ||
+            (logType == "*:W" && line.find(" W/") != std::string::npos) ||
+            (logType == "*:I" && line.find(" I/") != std::string::npos) ||
+            (logType == "kernel:V" && line.find(" kernel/") != std::string::npos) ||
+            (logType == "driver:V" && line.find(" driver/") != std::string::npos)) {
 
-        // Highlight time and type
-        auto timePos = line.find(' ');
-        if (timePos != std::string::npos) {
-            auto timeEnd = line.find(' ', timePos + 1);
-            if (timeEnd != std::string::npos) {
-                auto timeEndIter = iter;
-                timeEndIter.forward_chars(timeEnd);
-                logBuffer->apply_tag(timeTag, iter, timeEndIter);
+            auto iter = logBuffer->end();
+            logBuffer->insert(iter, line);
+            iter = logBuffer->end();
+            iter.backward_chars(line.length());
 
-                auto typePos = line.find(' ', timeEnd + 1);
-                if (typePos != std::string::npos) {
-                    auto typeStartIter = iter;
-                    typeStartIter.forward_chars(typePos);
-                    auto typeEndIter = iter;
-                    typeEndIter.forward_chars(line.find(' ', typePos + 1));
-                    logBuffer->apply_tag(typeTag, typeStartIter, typeEndIter);
+            // Apply tags based on content
+            if (line.find(" E/") != std::string::npos) {
+                logBuffer->apply_tag(errorTag, iter, logBuffer->end());
+            } else if (line.find(" W/") != std::string::npos) {
+                logBuffer->apply_tag(warningTag, iter, logBuffer->end());
+            } else if (line.find(" I/") != std::string::npos) {
+                logBuffer->apply_tag(infoTag, iter, logBuffer->end());
+            }
+
+            // Highlight time and type
+            auto timePos = line.find(' ');
+            if (timePos != std::string::npos) {
+                auto timeEnd = line.find(' ', timePos + 1);
+                if (timeEnd != std::string::npos) {
+                    auto timeEndIter = iter;
+                    timeEndIter.forward_chars(timeEnd);
+                    logBuffer->apply_tag(timeTag, iter, timeEndIter);
+
+                    auto typePos = line.find(' ', timeEnd + 1);
+                    if (typePos != std::string::npos) {
+                        auto typeStartIter = iter;
+                        typeStartIter.forward_chars(typePos);
+                        auto typeEndIter = iter;
+                        typeEndIter.forward_chars(line.find(' ', typePos + 1));
+                        logBuffer->apply_tag(typeTag, typeStartIter, typeEndIter);
+                    }
                 }
             }
         }
