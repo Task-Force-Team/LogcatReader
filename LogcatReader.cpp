@@ -1,4 +1,5 @@
 #include "LogcatReader.h"
+#include <gtkmm/filechooserdialog.h>
 
 LogcatReader::LogcatReader()
     : vbox(Gtk::ORIENTATION_VERTICAL, 10),
@@ -6,6 +7,7 @@ LogcatReader::LogcatReader()
       startButton("Start Logging"),
       exitButton("Exit"),
       searchButton("Search"),
+      openFileButton("Open File"), // New button for opening a file
       running(false),
       logFile(nullptr),
       buttonBox(Gtk::ORIENTATION_HORIZONTAL, 10),
@@ -42,6 +44,7 @@ LogcatReader::LogcatReader()
     vbox.pack_start(buttonBox, false, false, 0);
     buttonBox.pack_start(startButton, false, false, 0);
     buttonBox.pack_start(exitButton, false, false, 0);
+    buttonBox.pack_start(openFileButton, false, false, 0); // Add open file button
     vbox.pack_start(searchBox, false, false, 0);
     searchBox.pack_start(searchEntry, true, true, 0);
     searchBox.pack_start(searchButton, false, false, 0);
@@ -53,6 +56,7 @@ LogcatReader::LogcatReader()
     startButton.signal_clicked().connect(sigc::mem_fun(*this, &LogcatReader::onStartClicked));
     exitButton.signal_clicked().connect(sigc::mem_fun(*this, &LogcatReader::onExitClicked));
     searchButton.signal_clicked().connect(sigc::mem_fun(*this, &LogcatReader::onSearchClicked));
+    openFileButton.signal_clicked().connect(sigc::mem_fun(*this, &LogcatReader::onOpenFileClicked)); // Connect open file button
     logTypes.signal_changed().connect(sigc::mem_fun(*this, &LogcatReader::onLogTypeChanged));
     dispatcher.connect(sigc::mem_fun(*this, &LogcatReader::onDispatcher));
 
@@ -63,6 +67,7 @@ LogcatReader::LogcatReader()
     startButton.set_size_request(100, -1);
     exitButton.set_size_request(100, -1);
     searchButton.set_size_request(100, -1);
+    openFileButton.set_size_request(100, -1); // Set size for open file button
     scrolledWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     logFrame.set_label("Log Output");
     logFrame.set_label_align(0.5, 0.5);
@@ -129,6 +134,45 @@ void LogcatReader::onSearchClicked() {
         }
         logBuffer->apply_tag(searchTag, start, end);
         start = end;
+    }
+}
+
+void LogcatReader::onOpenFileClicked() {
+    Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FILE_CHOOSER_ACTION_OPEN);
+    dialog.set_transient_for(*this);
+
+    // Add response buttons to the dialog
+    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
+    // Show the dialog and wait for a user response
+    int result = dialog.run();
+
+    // Handle the response
+    switch (result) {
+        case (Gtk::RESPONSE_OK): {
+            std::string filename = dialog.get_filename();
+            std::ifstream file(filename);
+            if (file.is_open()) {
+                logBuffer->set_text(""); // Clear existing log buffer
+                std::string line;
+                while (getline(file, line)) {
+                    logBuffer->insert(logBuffer->end(), line + "\n");
+                }
+                file.close();
+            } else {
+                std::cerr << "Unable to open file: " << filename << std::endl;
+            }
+            break;
+        }
+        case (Gtk::RESPONSE_CANCEL): {
+            // User cancelled the operation
+            break;
+        }
+        default: {
+            // Other buttons are pressed
+            break;
+        }
     }
 }
 
